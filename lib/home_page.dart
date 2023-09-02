@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:tictactoe_game/custom_dialog.dart';
 import 'package:tictactoe_game/game_button.dart';
@@ -66,14 +68,45 @@ class _HomePageState extends State<HomePage> {
 
       gb.enabled = false;
 
-      checkWinner();
+      int winner = checkWinner();
+
+      if(winner == -1){
+        if(buttonList.every( (p) => p.text != '' )){
+          showDialog(
+            context: context,
+            builder: (_) => CustomDialog(title: 'Game Tied', content: 'Press the Reset button to start again.', callback: resetGame, actionText: 'Reset')
+          );
+        }
+        else{
+          activePlayer == 2 ? autoPlay() : null;
+        }
+      }
 
     });
 
   }
 
 
-  void checkWinner(){
+  void autoPlay(){
+
+    var emptyCells = [];
+    var list = List.generate(9, (i) => i+1);
+
+    for(var cellId in list){
+      if( !(player1.contains(cellId) || player2.contains(cellId)) ){
+        emptyCells.add(cellId);
+      }
+    }
+
+    var r = Random();
+    var randNum = r.nextInt(emptyCells.length - 1);
+    var cellId = emptyCells[randNum];
+    var i = buttonList.indexWhere((element) => element.id == cellId);
+    playGame(buttonList[i]);
+  }
+
+
+  int checkWinner(){
     var winner = -1;
 
     //for rows 
@@ -104,10 +137,10 @@ class _HomePageState extends State<HomePage> {
 
     // for columns
 
-    if(player1.contains(1) && player1.contains(3) && player1.contains(7)){
+    if(player1.contains(1) && player1.contains(4) && player1.contains(7)){
       winner = 1;
     }
-    if(player2.contains(1) && player2.contains(3) && player2.contains(7)){
+    if(player2.contains(1) && player2.contains(4) && player2.contains(7)){
       winner = 2;
     }
 
@@ -163,6 +196,8 @@ class _HomePageState extends State<HomePage> {
       }
     }
 
+    return winner;
+
   }
 
 
@@ -193,35 +228,50 @@ class _HomePageState extends State<HomePage> {
           gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFFF3904F), Color(0xFF3B4371)])
         ),
         clipBehavior: Clip.hardEdge,
-        child: Padding(
-          padding: const EdgeInsets.only(top: 108),
-          child: GridView.builder(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(  
-              crossAxisCount: 3,
-              childAspectRatio: 1.0,
-              crossAxisSpacing: 9.0,
-              mainAxisSpacing: 9.0, 
-            ),
-            itemCount: buttonList.length,
-            itemBuilder: (context,index) => SizedBox(
-              width: 100,
-              height: 100,
+        child: Column(
+          children: [
+            Expanded(
               child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: ElevatedButton(  
-                  onPressed: buttonList[index].enabled ? () => playGame(buttonList[index]) : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: buttonList[index].bg,
-                    disabledBackgroundColor: buttonList[index].bg,
+                padding: const EdgeInsets.only(top: 108),
+                child: GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(  
+                    crossAxisCount: 3,
+                    childAspectRatio: 1.0,
+                    crossAxisSpacing: 9.0,
+                    mainAxisSpacing: 9.0, 
                   ),
-                  child: Text(  
-                    buttonList[index].text,
-                    style: const TextStyle(color: Colors.white, fontSize: 20.0),
-                  ),
+                  itemCount: buttonList.length,
+                  itemBuilder: (context,index) => SizedBox(
+                    width: 100,
+                    height: 100,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: ElevatedButton(  
+                        onPressed: buttonList[index].enabled ? () => playGame(buttonList[index]) : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: buttonList[index].bg,
+                          disabledBackgroundColor: buttonList[index].bg,
+                        ),
+                        child: Text(  
+                          buttonList[index].text,
+                          style: const TextStyle(color: Colors.white, fontSize: 20.0),
+                        ),
+                      ),
+                    ),
+                  ) 
                 ),
               ),
-            ) 
-          ),
+            ),
+            TextButton(
+              onPressed: resetGame,
+              child: const Text(
+                'Reset Game',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20.0),
+              )
+            ),
+          ],
         ),
       )
     );
